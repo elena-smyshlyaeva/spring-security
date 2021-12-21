@@ -1,10 +1,9 @@
 package com.example.demospringsecurity.config;
 
-import com.example.demospringsecurity.domain.Permission;
 import com.example.demospringsecurity.domain.Role;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -16,6 +15,7 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
 @Configuration
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -25,29 +25,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()    //авторизация запроса (определение его прав доступа)
                 .antMatchers("/")   //какие паттерны урлов имеется доступ
                 .permitAll()   //доступ к главной странице ("/") есть у всех
-
-                /*
-                авторизация на основании ролей
-
-                //http-метод GET, который будет отправлен на любую страницу с урлом /api/... ,
-                //будет доступен всем: админу и обычному пользователю
-                .antMatchers(HttpMethod.GET, "/api/**").hasAnyRole(Role.ADMIN.name(), Role.USER.name())
-
-                //если метод POST, то доступ имеется только у админа
-                .antMatchers(HttpMethod.POST, "/api/**").hasRole(Role.ADMIN.name())
-
-                //аналогично для delete метода
-                .antMatchers(HttpMethod.DELETE, "/api/**").hasRole(Role.ADMIN.name())
-
-                 */
-
-                /*
-                авторизация на основании ращрешений
-                 */
-                .antMatchers(HttpMethod.GET,"/api/**").hasAuthority(Permission.DEVELOPERS_READ.getPermission())
-                .antMatchers(HttpMethod.POST, "/api/**").hasAuthority(Permission.DEVELOPERS_WRITE.getPermission())
-                .antMatchers(HttpMethod.DELETE, "/api/**").hasAuthority(Permission.DEVELOPERS_WRITE.getPermission())
-
                 //любой запрос должен быть аутентифицирован (с помощью 64basic)
                 .anyRequest().authenticated().and().httpBasic();
     }
