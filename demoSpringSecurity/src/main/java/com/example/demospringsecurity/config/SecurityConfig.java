@@ -12,6 +12,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -25,10 +26,27 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()    //авторизация запроса (определение его прав доступа)
                 .antMatchers("/")   //какие паттерны урлов имеется доступ
                 .permitAll()   //доступ к главной странице ("/") есть у всех
-                //любой запрос должен быть аутентифицирован (с помощью 64basic)
-                .anyRequest().authenticated().and().httpBasic();
-    }
 
+                //любой запрос должен быть аутентифицирован (с помощью формы)
+                .anyRequest().authenticated().and()
+                .formLogin()
+                .loginPage("/auth/login") //ссылка на страницу
+                .permitAll() //все имеют доступ
+                .defaultSuccessUrl("/auth/success") //ссылка на страницу, если вход успешен
+
+                //когда logout отдается через метод GET - это не безопасно, поэтому изменим на POST
+                .and()
+                .logout()
+
+                //соединяем запрос с логаутом: указываем ссылку и метод, по которому он будет происходить
+                .logoutRequestMatcher(new AntPathRequestMatcher("/auth/logout", "POST"))
+
+                //убираем за собой
+                .invalidateHttpSession(true)
+                .clearAuthentication(true)
+                .deleteCookies("JSESSIONID")
+                .logoutSuccessUrl("/auth/login"); //на какую страницу перенаправляет после логаута
+    }
     @Bean
     @Override
     protected UserDetailsService userDetailsService() {
@@ -47,6 +65,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                         .build()
         );
     }
+
+
 
     //bean for encrypt password
     @Bean
